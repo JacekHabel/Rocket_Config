@@ -27,7 +27,7 @@ static esp_err_t pre_write_check(const char *key, nvs_type_t type, bool *exists)
     }
 
     nvs_type_t existing;
-    esp_err_t err = nvs_find_key(handle, key, &existing);
+    esp_err_t err = nvs_find_key(s_handle, key, &existing);
 
     if (err == ESP_ERR_NVS_NOT_FOUND) { 
         *exists = false;
@@ -48,7 +48,7 @@ static esp_err_t commit_if_ok(esp_err_t err)
         return err;    
     } 
 
-    err = nvs_commit(handle);
+    err = nvs_commit(s_handle);
 
     if (err != ESP_OK) {
         ESP_LOGE(TAG, "nvs_commit failed: %s", esp_err_to_name(err));
@@ -136,7 +136,21 @@ esp_err_t storage_set_f32(const char *key, float value) {
 }
 
 esp_err_t storage_set_bool(const char *key, bool value) {
+    bool exists;
 
+    esp_err_t = pre_write_check(key, NVS_TYPE_U8, &exists);
+    if (err != ESP_OK) {
+        return err;
+    }
+
+    uint8_t v = value ? 1 : 0;
+    if (exists) {
+        uint8_t cur;
+        if (nvs_get_u8(s_handle, key, &cur) == ESP_OK && cur == v) {
+            return ESP_OK;
+        }
+    }
+    return commit_if_ok(nvs_set_u8(s_handle, key, v));
 }
 
 esp_err_t storage_set_str(const char *key, const char *value) {
@@ -154,14 +168,14 @@ esp_err_t storage_set_str(const char *key, const char *value) {
     if (exists) {
         char cur[STORAGE_STR_MAX_LEN + 1];
         size_t len = sizeof(cur);
-        
+
         if (nvs_get_str(s_handle, key, cur, &len) == ESP_OK && strcmp(cur, value) == 0) {
             return ESP_OK;
         }
     }
     return commit_if_ok(nvs_set_str(s_handle, key, value));
 }
-
+/*
 esp_err_t storage_get_i32(const char *key, int32_t *out) {
 
 }
@@ -182,3 +196,4 @@ esp_err_t storage_delete(const char *key) {
 esp_err_t storage_list_all(void) {
     
 }
+*/
