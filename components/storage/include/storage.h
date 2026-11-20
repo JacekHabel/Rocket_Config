@@ -1,21 +1,20 @@
 #pragma once
 
-typedef enum {
-    STORAGE_INT,
-    STORAGE_FLOAT,
-    STORAGE_BOOL,
-    STORAGE_STRING
-} storage_type_t;
-
 esp_err_t storage_init(void);
 
-esp_err_t storage_write_i32(const char *key, storage_type_t type, const void *value);
+esp_err_t storage_set_i32(const char *key, int32_t value);
+esp_err_t storage_set_f32(const char *key, float value);
+esp_err_t storage_set_bool(const char *key, bool value);
+esp_err_t storage_set_str(const char *key, const char *value);
 
-esp_err_t storage_read_i32(const char *key, storage_type_t type, void *value);
+esp_err_t storage_get_i32(const char *key, int32_t *out);
+esp_err_t storage_get_f32(const char *key, float *out);
+esp_err_t storage_get_bool(const char *key, bool *out);
+esp_err_t storage_get_str(const char *key, char *buf, size_t buf_len);
 
 esp_err_t storage_delete(const char *key);
 
-esp_err_t storage_list(void);
+esp_err_t storage_list_all(void);
 
 
 

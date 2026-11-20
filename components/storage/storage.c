@@ -11,6 +11,7 @@ static const char *TAG = "STORAGE";
 
 static nvs_handle_t handle;
 
+
 esp_err_t storage_init(void) {
     esp_err_t err = nvs_flash_init();
 
@@ -47,63 +48,37 @@ esp_err_t storage_init(void) {
     return ESP_OK;    
 }
 
-esp_err_t storage_write(const char *key, storage_type_t type, const void *value) {
-    esp_err_t err;
+esp_err_t storage_set_i32(const char *key, int32_t value) {
 
-    switch (type) {
-
-        case STORAGE_INT:
-            err = nvs_set_i32(
-                handle,
-                key,
-                *(const int32_t *)value
-            );
-            break;
-
-        case STORAGE_FLOAT:
-            err = nvs_set_blob(
-                handle,
-                key,
-                value,
-                sizeof(float)
-            );
-            break;
-
-        case STORAGE_BOOL:
-            err = nvs_set_u8(
-                handle,
-                key,
-                *(const bool *)value ? 1 : 0
-            );
-            break;
-
-        case STORAGE_STRING:
-            err = nvs_set_str(
-                handle,
-                key,
-                (const char *)value
-            );
-            break;
-
-        default:
-            return ESP_ERR_INVALID_ARG;
-    }
-
-    if (err != ESP_OK) {
-        return err;
-    }
-
-    return nvs_commit(handle);
 }
 
-esp_err_t storage_read(const char *key, int32_t *value) {
-   
+esp_err_t storage_set_f32(const char *key, float value) {
+
+}
+esp_err_t storage_set_bool(const char *key, bool value) {
+
+}
+esp_err_t storage_set_str(const char *key, const char *value) {
+
+}
+
+esp_err_t storage_get_i32(const char *key, int32_t *out) {
+
+}
+esp_err_t storage_get_f32(const char *key, float *out) {
+
+}
+esp_err_t storage_get_bool(const char *key, bool *out) {
+
+}
+esp_err_t storage_get_str(const char *key, char *buf, size_t buf_len) {
+
 }
 
 esp_err_t storage_delete(const char *key) {
 
 }
 
-esp_err_t storage_list(void) {
+esp_err_t storage_list_all(void) {
     
 }
