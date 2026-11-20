@@ -11,6 +11,20 @@ static const char *TAG = "STORAGE";
 
 static nvs_handle_t handle;
 
+static esp_err_t pre_write_check(const char *key, nvs_type_t type, bool *exists)
+{
+    if (!s_initialized) return ESP_ERR_INVALID_STATE;
+    if (!key || strlen(key) == 0 || strlen(key) > NVS_KEY_NAME_MAX_SIZE - 1)
+        return ESP_ERR_INVALID_ARG;
+
+    nvs_type_t existing;
+    esp_err_t err = nvs_find_key(s_handle, key, &existing);
+    if (err == ESP_ERR_NVS_NOT_FOUND) { *exists = false; return ESP_OK; }
+    if (err != ESP_OK) return err;
+
+    *exists = true;
+    return (existing == type) ? ESP_OK : ESP_ERR_INVALID_STATE;  // zmiana typu zabroniona
+}
 
 esp_err_t storage_init(void) {
     esp_err_t err = nvs_flash_init();
@@ -49,7 +63,7 @@ esp_err_t storage_init(void) {
 }
 
 esp_err_t storage_set_i32(const char *key, int32_t value) {
-
+    
 }
 
 esp_err_t storage_set_f32(const char *key, float value) {
