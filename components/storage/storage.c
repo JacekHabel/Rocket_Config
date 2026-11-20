@@ -146,19 +146,20 @@ esp_err_t storage_set_str(const char *key, const char *value) {
 
     bool exists;
     esp_err_t err = pre_write_check(key, NVS_TYPE_STR, &exists);
-    
+
     if (err != ESP_OK) {
-        ESP_LOGE(TAG, "Failed to write string: %s", esp_err_to_name(err));
         return err;
     }
 
     if (exists) {
-        int32_t cur;
-        if (nvs_get_i32(s_handle, key, &cur) == ESP_OK && cur == value)
-        return ESP_OK;                      
+        char cur[STORAGE_STR_MAX_LEN + 1];
+        size_t len = sizeof(cur);
+        
+        if (nvs_get_str(s_handle, key, cur, &len) == ESP_OK && strcmp(cur, value) == 0) {
+            return ESP_OK;
+        }
     }
-
-    return commit_if_ok(nvs_set_i32(s_handle, key, value));
+    return commit_if_ok(nvs_set_str(s_handle, key, value));
 }
 
 esp_err_t storage_get_i32(const char *key, int32_t *out) {
