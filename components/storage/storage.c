@@ -114,7 +114,24 @@ esp_err_t storage_set_i32(const char *key, int32_t value) {
 }
 
 esp_err_t storage_set_f32(const char *key, float value) {
+    bool exists;
+
+    esp_err_t err = pre_write_check(key, NVS_TYPE_BLOB, &exists);
     
+    if (err != ESP_OK) {
+        return err;
+    } 
+
+    if (exists) {
+        float cur;
+        size_t len = sizeof(cur);
+        
+        if (nvs_get_blob(s_handle, key, &cur, &len) == ESP_OK && 
+            len == sizeof(cur) && memcmp(&cur, &value, sizeof(cur)) == 0) {
+            return ESP_OK;
+        }
+    }
+    return commit_if_ok(nvs_set_blob(s_handle, key, &value, sizeof(value)));
 }
 
 esp_err_t storage_set_bool(const char *key, bool value) {
