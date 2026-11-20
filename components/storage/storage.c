@@ -9,21 +9,46 @@
 
 static const char *TAG = "STORAGE";
 
-static nvs_handle_t handle;
+static nvhandl_t handle;
 
-static esp_err_t pre_write_check(const char *key, nvs_type_t type, bool *exists)
-{
-    if (!s_initialized) return ESP_ERR_INVALID_STATE;
-    if (!key || strlen(key) == 0 || strlen(key) > NVS_KEY_NAME_MAX_SIZE - 1)
+static esp_err_t pre_write_check(const char *key, nvs_type_t type, bool *exists) {
+    if (!s_initialized) {
+        return ESP_ERR_INVALID_STATE;
+    }    
+
+    if (!key || strlen(key) == 0 || strlen(key) > NVS_KEY_NAME_MAX_SIZE - 1) {
         return ESP_ERR_INVALID_ARG;
-
+    }
+        
     nvs_type_t existing;
-    esp_err_t err = nvs_find_key(s_handle, key, &existing);
-    if (err == ESP_ERR_NVS_NOT_FOUND) { *exists = false; return ESP_OK; }
-    if (err != ESP_OK) return err;
+    esp_err_t err = nvs_find_key(handle, key, &existing);
+
+    if (err == ESP_ERR_NVS_NOT_FOUND) { 
+        *exists = false;
+        return ESP_OK;
+    }
+
+    if (err != ESP_OK) {
+        return err;
+    }
 
     *exists = true;
     return (existing == type) ? ESP_OK : ESP_ERR_INVALID_STATE;  // zmiana typu zabroniona
+}
+
+static esp_err_t commit_if_ok(esp_err_t err)
+{
+    if (err != ESP_OK) {
+        return err;    
+    } 
+
+    err = nvs_commit(handle);
+
+    if (err != ESP_OK) {
+        ESP_LOGE(TAG, "nvs_commit failed: %s", esp_err_to_name(err));
+    }
+
+    return err;
 }
 
 esp_err_t storage_init(void) {
@@ -34,8 +59,7 @@ esp_err_t storage_init(void) {
 
         err = nvs_flash_erase();
         if (err != ESP_OK) {
-            ESP_LOGE(TAG, "NVS erase failed: %s",
-                     esp_err_to_name(err));
+            ESP_LOGE(TAG, "NVS erase failed: %s", esp_err_to_name(err));
             return err;
         }
 
@@ -43,8 +67,7 @@ esp_err_t storage_init(void) {
     }
 
     if (err != ESP_OK) {
-        ESP_LOGE(TAG, "NVS initialization failed: %s",
-                 esp_err_to_name(err));
+        ESP_LOGE(TAG, "NVS initialization failed: %s", esp_err_to_name(err));
         return err;
     }
 
@@ -52,8 +75,7 @@ esp_err_t storage_init(void) {
     err = nvs_open("storage", NVS_READWRITE, &handle);
 
     if (err != ESP_OK) {
-        ESP_LOGE(TAG, "Failed to open NVS namespace: %s",
-                 esp_err_to_name(err));
+        ESP_LOGE(TAG, "Failed to open NVS namespace: %s", esp_err_to_name(err));
         return err;
     }
 
@@ -63,17 +85,33 @@ esp_err_t storage_init(void) {
 }
 
 esp_err_t storage_set_i32(const char *key, int32_t value) {
+    bool exists;
     
+    esp_err_t err = pre_write_check(key, NVS_TYPE_I32, &exists);
+    
+    if (err != ESP_OK) {
+        return err;
+    }
+
+    if (exists) {
+        int32_t cur;
+        if (nvs_get_i32(handle, key, &cur) == ESP_OK && cur == value)
+            return ESP_OK;                      
+    }
+
+    return commit_if_ok(nvs_set_i32(handle, key, value));
 }
 
 esp_err_t storage_set_f32(const char *key, float value) {
-
+    
 }
+
 esp_err_t storage_set_bool(const char *key, bool value) {
 
 }
-esp_err_t storage_set_str(const char *key, const char *value) {
 
+esp_err_t storage_set_str(const char *key, const char *value) {
+  
 }
 
 esp_err_t storage_get_i32(const char *key, int32_t *out) {
