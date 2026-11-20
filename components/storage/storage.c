@@ -9,17 +9,23 @@
 
 static const char *TAG = "STORAGE";
 
-static nvhandl_t handle;
+static nvs_handle_t s_handle;
+
+static bool s_initialized = false;
+
+static bool key_is_valid(const char *key) {
+    return key != NULL && key[0] != '\0' && strlen(key) <= NVS_KEY_NAME_MAX_SIZE - 1;
+}
 
 static esp_err_t pre_write_check(const char *key, nvs_type_t type, bool *exists) {
     if (!s_initialized) {
         return ESP_ERR_INVALID_STATE;
     }    
 
-    if (!key || strlen(key) == 0 || strlen(key) > NVS_KEY_NAME_MAX_SIZE - 1) {
+    if (!key_is_valid(key)) {
         return ESP_ERR_INVALID_ARG;
     }
-        
+
     nvs_type_t existing;
     esp_err_t err = nvs_find_key(handle, key, &existing);
 
@@ -52,6 +58,10 @@ static esp_err_t commit_if_ok(esp_err_t err)
 }
 
 esp_err_t storage_init(void) {
+    if (s_initialized) {
+        return ESP_OK;
+    }
+
     esp_err_t err = nvs_flash_init();
 
     if (err == ESP_ERR_NVS_NO_FREE_PAGES || err == ESP_ERR_NVS_NEW_VERSION_FOUND) {
@@ -72,15 +82,15 @@ esp_err_t storage_init(void) {
     }
 
     ESP_LOGI(TAG, "Opening NVS handle...");
-    err = nvs_open("storage", NVS_READWRITE, &handle);
+    err = nvs_open("storage", NVS_READWRITE, &s_handle);
 
     if (err != ESP_OK) {
         ESP_LOGE(TAG, "Failed to open NVS namespace: %s", esp_err_to_name(err));
         return err;
     }
 
+    s_initialized = true;
     ESP_LOGI(TAG, "Storage initialized");
-
     return ESP_OK;    
 }
 
@@ -95,11 +105,12 @@ esp_err_t storage_set_i32(const char *key, int32_t value) {
 
     if (exists) {
         int32_t cur;
-        if (nvs_get_i32(handle, key, &cur) == ESP_OK && cur == value)
-            return ESP_OK;                      
+        if (nvs_get_i32(s_handle, key, &cur) == ESP_OK && cur == value) {
+            return ESP_OK;        
+        }
     }
 
-    return commit_if_ok(nvs_set_i32(handle, key, value));
+    return commit_if_ok(nvs_set_i32(s_handle, key, value));
 }
 
 esp_err_t storage_set_f32(const char *key, float value) {
@@ -111,7 +122,22 @@ esp_err_t storage_set_bool(const char *key, bool value) {
 }
 
 esp_err_t storage_set_str(const char *key, const char *value) {
-  
+    bool exists;
+    
+    esp_err_t err = pre_write_check(key, NVS_TYPE_STR, &exists);
+    
+    if (err != ESP_OK) {
+        ESP_LOGE(TAG, "Failed to write string: %s", esp_err_to_name(err));
+        return err;
+    }
+
+    if (exists) {
+        int32_t cur;
+        if (nvs_get_i32(handle, key, &cur) == ESP_OK && cur == value)
+        return ESP_OK;                      
+    }
+
+    return commit_if_ok(nvs_set_i32(handle, key, value));
 }
 
 esp_err_t storage_get_i32(const char *key, int32_t *out) {
