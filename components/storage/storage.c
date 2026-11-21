@@ -7,6 +7,8 @@
 #include "nvs_flash.h"
 #include "esp_log.h"
 
+#define STORAGE_NAMESPACE "storage"
+
 static const char *TAG = "STORAGE";
 
 static nvs_handle_t s_handle;
@@ -322,6 +324,85 @@ esp_err_t storage_delete_element(const char *key) {
     return commit_if_ok(nvs_erase_key(s_handle, key)); 
 }
 
-esp_err_t storage_list_all(void) {
+esp_err_t storage_list_all(storage_list_cb_t cb, void *ctx) {
+    if (!s_initialized) {
+        return ESP_ERR_INVALID_STATE;
+    }
+    
+    if (cb == NULL) { 
+        return ESP_ERR_INVALID_ARG;
+    }
 
+    char text[STORAGE_STR_MAX_LEN + 1];
+
+    nvs_iterator_t it = NULL;
+    esp_err_t err = nvs_entry_find("nvs", STORAGE_NAMESPACE, NVS_TYPE_ANY, &it);
+
+    while (err == ESP_OK) {
+        nvs_entry_info_t info;
+        nvs_entry_info(it, &info);
+
+        switch (info.type) {
+            case NVS_TYPE_I32: {
+                int32_t v;
+                if (nvs_get_i32(s_handle, info.key, &v) == ESP_OK) {
+                    snprintf(text, sizeof(text), "%ld", (long)v);
+                    cb(info.key, STORAGE_INT, text, false, ctx);
+                }
+                break;
+            }
+            case NVS_TYPE_FLOAT: {
+                float v;
+                if (nvs_get_float(s_handle, info.key, &v) == ESP_OK) {
+                    snprintf(text, sizeof(text), "%.6g", (double)v);
+                    cb(info.key, STORAGE_FLOAT, text, false, ctx);
+                }
+                break;
+            }
+            case NVS_TYPE_U8: {
+                uint8_t v;
+                if (nvs_get_u8(s_handle, info.key, &v) == ESP_OK) {
+                    cb(info.key, STORAGE_BOOL, v ? "true" : "false", false, ctx);
+                }
+                break;
+            }
+            case NVS_TYPE_STR: {
+                size_t len = sizeof(text);
+                if (nvs_get_str(s_handle, info.key, text, &len) == ESP_OK) {
+                    cb(info.key, STORAGE_STRING, text, false, ctx);
+                }
+                break;
+            }
+            default:
+                break;   
+        }       
+        err = nvs_entry_next(&it);
+    }
+    nvs_release_iterator(it);
+
+    //Defaults which are not stored yet
+    for (size_t i = 0; i < DEFAULTS_COUNT; i++) {
+        const storage_default_t *d = &s_defaults[i];
+        nvs_type_t existing;
+        if (nvs_find_key(s_handle, d->key, &existing) != ESP_ERR_NVS_NOT_FOUND) {
+            continue;
+        }
+        switch (d->type) {
+            case STORAGE_INT:
+                snprintf(text, sizeof(text), "%ld", (long)d->def.i);
+                break;
+            case STORAGE_FLOAT:
+                snprintf(text, sizeof(text), "%.6g", (double)d->def.f);
+                break;
+            case STORAGE_BOOL:
+                snprintf(text, sizeof(text), "%s", d->def.b ? "true" : "false");
+                break;
+            case STORAGE_STRING:
+                snprintf(text, sizeof(text), "%s", d->def.s);
+                break;
+        }
+        cb(d->key, d->type, text, true, ctx);
+    }
+
+    return ESP_OK;
 }

@@ -15,6 +15,14 @@ typedef enum {
     STORAGE_STRING,
 } storage_type_t;
 
+typedef void (*storage_list_cb_t)(
+    const char *key,
+    storage_type_t type,
+    const char *value_str,
+    bool is_default,
+    void *ctx
+);
+
 esp_err_t storage_init(void);
 
 esp_err_t storage_set_i32(const char *key, int32_t value);
@@ -29,7 +37,7 @@ esp_err_t storage_get_str(const char *key, char *buf, size_t buf_len);
 
 esp_err_t storage_delete_element(const char *key);
 
-esp_err_t storage_list_all(void);
+esp_err_t storage_list_all(storage_list_cb_t cb, void *ctx);
 
 
 
