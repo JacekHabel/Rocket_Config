@@ -51,10 +51,12 @@ static const storage_default_t *find_default(const char *key, storage_type_t typ
 
 static esp_err_t pre_write_check(const char *key, nvs_type_t type, bool *exists) {
     if (!s_initialized) {
+        ESP_LOGI(TAG, "Cannot access key '%s': storage is not initialized", key ? key : "(null)");
         return ESP_ERR_INVALID_STATE;
-    }    
+    }
 
     if (!key_is_valid(key)) {
+        ESP_LOGI(TAG, "Cannot access invalid key");
         return ESP_ERR_INVALID_ARG;
     }
 
@@ -67,6 +69,7 @@ static esp_err_t pre_write_check(const char *key, nvs_type_t type, bool *exists)
     }
 
     if (err != ESP_OK) {
+        ESP_LOGI(TAG, "Failed to find key '%s': %s", key, esp_err_to_name(err));
         return err;
     }
 
@@ -77,8 +80,9 @@ static esp_err_t pre_write_check(const char *key, nvs_type_t type, bool *exists)
 static esp_err_t commit_if_ok(esp_err_t err)
 {
     if (err != ESP_OK) {
-        return err;    
-    } 
+        ESP_LOGI(TAG, "NVS write failed: %s", esp_err_to_name(err));
+        return err;
+    }
 
     err = nvs_commit(s_handle);
 
@@ -91,6 +95,7 @@ static esp_err_t commit_if_ok(esp_err_t err)
 
 esp_err_t storage_init(void) {
     if (s_initialized) {
+        ESP_LOGI(TAG, "Storage is already initialized");
         return ESP_OK;
     }
 
@@ -114,7 +119,7 @@ esp_err_t storage_init(void) {
     }
 
     ESP_LOGI(TAG, "Opening NVS handle...");
-    err = nvs_open("STORAGE_NAMESPACE", NVS_READWRITE, &s_handle);
+    err = nvs_open(STORAGE_NAMESPACE, NVS_READWRITE, &s_handle);
 
     if (err != ESP_OK) {
         ESP_LOGE(TAG, "Failed to open NVS namespace: %s", esp_err_to_name(err));
@@ -129,10 +134,12 @@ esp_err_t storage_init(void) {
 void storage_deinit(void)
 {
     if (!s_initialized) {
+        ESP_LOGI(TAG, "Storage is already deinitialized");
         return;
-    } 
+    }
     nvs_close(s_handle);
     s_initialized = false;
+    ESP_LOGI(TAG, "Storage deinitialized");
 }
 
 esp_err_t storage_set_i32(const char *key, int32_t value) {
@@ -147,11 +154,16 @@ esp_err_t storage_set_i32(const char *key, int32_t value) {
     if (exists) {
         int32_t cur;
         if (nvs_get_i32(s_handle, key, &cur) == ESP_OK && cur == value) {
+            ESP_LOGI(TAG, "Key '%s' already has value %ld", key, (long)value);
             return ESP_OK;        
         }
     }
 
-    return commit_if_ok(nvs_set_i32(s_handle, key, value));
+    err = commit_if_ok(nvs_set_i32(s_handle, key, value));
+    if (err == ESP_OK) {
+        ESP_LOGI(TAG, "Set key '%s' to %ld", key, (long)value);
+    }
+    return err;
 }
 
 
@@ -167,10 +179,15 @@ esp_err_t storage_set_float(const char *key, float value) {
     if (exists) {
         float cur;
         if (nvs_get_float(s_handle, key, &cur) == ESP_OK && cur == value) {
+            ESP_LOGI(TAG, "Key '%s' already has value %.6g", key, (double)value);
             return ESP_OK;
         }
     }
-    return commit_if_ok(nvs_set_float(s_handle, key, value));
+    err = commit_if_ok(nvs_set_float(s_handle, key, value));
+    if (err == ESP_OK) {
+        ESP_LOGI(TAG, "Set key '%s' to %.6g", key, (double)value);
+    }
+    return err;
 }
 
 esp_err_t storage_set_bool(const char *key, bool value) {
@@ -185,14 +202,20 @@ esp_err_t storage_set_bool(const char *key, bool value) {
     if (exists) {
         uint8_t cur;
         if (nvs_get_u8(s_handle, key, &cur) == ESP_OK && cur == v) {
+            ESP_LOGI(TAG, "Key '%s' already has value %s", key, value ? "true" : "false");
             return ESP_OK;
         }
     }
-    return commit_if_ok(nvs_set_u8(s_handle, key, v));
+    err = commit_if_ok(nvs_set_u8(s_handle, key, v));
+    if (err == ESP_OK) {
+        ESP_LOGI(TAG, "Set key '%s' to %s", key, value ? "true" : "false");
+    }
+    return err;
 }
 
 esp_err_t storage_set_str(const char *key, const char *value) {
     if (value == NULL || strlen(value) > STORAGE_STR_MAX_LEN) {
+        ESP_LOGI(TAG, "Invalid string value for key '%s'", key ? key : "(null)");
         return ESP_ERR_INVALID_ARG;
     }
 
@@ -208,24 +231,31 @@ esp_err_t storage_set_str(const char *key, const char *value) {
         size_t len = sizeof(cur);
 
         if (nvs_get_str(s_handle, key, cur, &len) == ESP_OK && strcmp(cur, value) == 0) {
+            ESP_LOGI(TAG, "Key '%s' already has value '%s'", key, value);
             return ESP_OK;
         }
     }
-    return commit_if_ok(nvs_set_str(s_handle, key, value));
+    err = commit_if_ok(nvs_set_str(s_handle, key, value));
+    if (err == ESP_OK) {
+        ESP_LOGI(TAG, "Set key '%s' to '%s'", key, value);
+    }
+    return err;
 }
 
 esp_err_t storage_get_i32(const char *key, int32_t *value) {
     if (!s_initialized) {
+        ESP_LOGI(TAG, "Cannot get key '%s': storage is not initialized", key ? key : "(null)");
         return ESP_ERR_INVALID_STATE;
     }
-
     if(!key_is_valid(key) || value == NULL) {
+        ESP_LOGI(TAG, "Cannot get invalid key or value pointer");
         return ESP_ERR_INVALID_ARG;
     }
 
     esp_err_t err = nvs_get_i32(s_handle, key, value);
 
     if (err == ESP_OK) {
+        ESP_LOGI(TAG, "Got key '%s' value %ld", key, (long)*value);
         return err;
     }
 
@@ -234,24 +264,29 @@ esp_err_t storage_get_i32(const char *key, int32_t *value) {
         const storage_default_t *d = find_default(key, STORAGE_INT);
         if (d) {
             *value = d->def.i; 
+            ESP_LOGI(TAG, "Key '%s' not found; using default %ld", key, (long)*value);
             return ESP_OK; 
         }
     }
+    ESP_LOGI(TAG, "Failed to get key '%s': %s", key, esp_err_to_name(err));
     return err;
 }
 
 esp_err_t storage_get_float(const char *key, float *value) {
     if (!s_initialized) {
+        ESP_LOGI(TAG, "Cannot get key '%s': storage is not initialized", key ? key : "(null)");
         return ESP_ERR_INVALID_STATE;
     }
 
     if (!key_is_valid(key) || value == NULL) { 
+        ESP_LOGI(TAG, "Cannot get invalid key or value pointer");
         return ESP_ERR_INVALID_ARG;
     }
 
     esp_err_t err = nvs_get_float(s_handle, key, value);
 
      if (err == ESP_OK) {
+        ESP_LOGI(TAG, "Got key '%s' value %.6g", key, (double)*value);
         return err;
     }
 
@@ -260,18 +295,22 @@ esp_err_t storage_get_float(const char *key, float *value) {
         const storage_default_t *d = find_default(key, STORAGE_FLOAT);
         if (d) {
             *value = d->def.f;
+            ESP_LOGI(TAG, "Key '%s' not found; using default %.6g", key, (double)*value);
             return ESP_OK; 
         }
     }
+    ESP_LOGI(TAG, "Failed to get key '%s': %s", key, esp_err_to_name(err));
     return err;
 }
 
 esp_err_t storage_get_bool(const char *key, bool *value) {
     if (!s_initialized) {
+        ESP_LOGI(TAG, "Cannot get key '%s': storage is not initialized", key ? key : "(null)");
         return ESP_ERR_INVALID_STATE;
     }
 
     if (!key_is_valid(key) || value == NULL) { 
+        ESP_LOGI(TAG, "Cannot get invalid key or value pointer");
         return ESP_ERR_INVALID_ARG;
     }
 
@@ -280,6 +319,7 @@ esp_err_t storage_get_bool(const char *key, bool *value) {
     
     if (err == ESP_OK) {
         *value = (v != 0);
+        ESP_LOGI(TAG, "Got key '%s' value %s", key, *value ? "true" : "false");
         return ESP_OK;
     }
 
@@ -287,18 +327,22 @@ esp_err_t storage_get_bool(const char *key, bool *value) {
         const storage_default_t *d = find_default(key, STORAGE_BOOL);
         if (d) {
             *value = d->def.b;
+            ESP_LOGI(TAG, "Key '%s' not found; using default %s", key, *value ? "true" : "false");
             return ESP_OK; 
         }
     }
+    ESP_LOGI(TAG, "Failed to get key '%s': %s", key, esp_err_to_name(err));
     return err;
 }
 
 esp_err_t storage_get_str(const char *key, char *buf, size_t buf_len) {
     if (!s_initialized) { 
+        ESP_LOGI(TAG, "Cannot get key '%s': storage is not initialized", key ? key : "(null)");
         return ESP_ERR_INVALID_STATE;
     }
     
     if (!key_is_valid(key) || buf == NULL || buf_len == 0) {
+        ESP_LOGI(TAG, "Cannot get invalid key or buffer");
         return ESP_ERR_INVALID_ARG;
     }
 
@@ -310,37 +354,53 @@ esp_err_t storage_get_str(const char *key, char *buf, size_t buf_len) {
         
         if (d) {
             if (strlen(d->def.s) + 1 > buf_len) {
+                ESP_LOGI(TAG, "Buffer too small for default string key '%s'", key);
                 return ESP_ERR_INVALID_SIZE;
             }
             
             strcpy(buf, d->def.s);
+            ESP_LOGI(TAG, "Key '%s' not found; using default '%s'", key, buf);
             return ESP_OK;
         }
+    }
+    if (err != ESP_OK) {
+        ESP_LOGI(TAG, "Failed to get key '%s': %s", key, esp_err_to_name(err));
+    } else {
+        ESP_LOGI(TAG, "Got key '%s' value '%s'", key, buf);
     }
     return err;   
 }
 
 esp_err_t storage_delete_element(const char *key) {
     if (!s_initialized) {
+        ESP_LOGI(TAG, "Cannot delete key '%s': storage is not initialized", key ? key : "(null)");
         return ESP_ERR_INVALID_STATE;
     }
 
     if (!key_is_valid(key)) {
+        ESP_LOGI(TAG, "Cannot delete invalid key");
         return ESP_ERR_INVALID_ARG;
     }
 
-    return commit_if_ok(nvs_erase_key(s_handle, key)); 
+    esp_err_t err = commit_if_ok(nvs_erase_key(s_handle, key));
+    if (err == ESP_OK) {
+        ESP_LOGI(TAG, "Deleted key '%s'", key);
+    }
+    return err;
 }
 
 esp_err_t storage_list_all(storage_list_cb_t cb, void *ctx) {
     if (!s_initialized) {
+        ESP_LOGI(TAG, "Cannot list storage: storage is not initialized");
         return ESP_ERR_INVALID_STATE;
     }
     
     if (cb == NULL) { 
+        ESP_LOGI(TAG, "Cannot list storage: callback is null");
         return ESP_ERR_INVALID_ARG;
     }
 
+    ESP_LOGI(TAG, "Listing all storage entries");
     char text[STORAGE_STR_MAX_LEN + 1];
 
     nvs_iterator_t it = NULL;
