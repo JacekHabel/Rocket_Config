@@ -1,3 +1,4 @@
+#include <stdio.h>
 #include <string.h>
 #include <stdbool.h>
 #include <stdint.h>
@@ -72,7 +73,7 @@ static esp_err_t pre_write_check(const char *key, nvs_type_t type, bool *exists)
     }
 
     *exists = true;
-    return (existing == type) ? ESP_OK : ESP_ERR_INVALID_STATE;  // zmiana typu zabroniona
+    return (existing == type) ? ESP_OK : ESP_ERR_INVALID_STATE;  
 }
 
 static esp_err_t commit_if_ok(esp_err_t err)
@@ -115,7 +116,7 @@ esp_err_t storage_init(void) {
     }
 
     ESP_LOGI(TAG, "Opening NVS handle...");
-    err = nvs_open("storage", NVS_READWRITE, &s_handle);
+    err = nvs_open("STORAGE_NAMESPACE", NVS_READWRITE, &s_handle);
 
     if (err != ESP_OK) {
         ESP_LOGE(TAG, "Failed to open NVS namespace: %s", esp_err_to_name(err));
@@ -336,7 +337,7 @@ esp_err_t storage_list_all(storage_list_cb_t cb, void *ctx) {
     char text[STORAGE_STR_MAX_LEN + 1];
 
     nvs_iterator_t it = NULL;
-    esp_err_t err = nvs_entry_find("nvs", STORAGE_NAMESPACE, NVS_TYPE_ANY, &it);
+    esp_err_t err = nvs_entry_find(NVS_DEFAULT_PART_NAME, STORAGE_NAMESPACE, NVS_TYPE_ANY, &it);
 
     while (err == ESP_OK) {
         nvs_entry_info_t info;
