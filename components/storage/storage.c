@@ -238,7 +238,7 @@ esp_err_t storage_get_f32(const char *key, float *value) {
         return ESP_ERR_INVALID_STATE;
     }
 
-    if (!key_is_valid(key) || out == NULL) { 
+    if (!key_is_valid(key) || value == NULL) { 
         return ESP_ERR_INVALID_ARG;
     }
 
