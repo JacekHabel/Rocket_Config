@@ -272,7 +272,7 @@ esp_err_t storage_get_bool(const char *key, bool *value) {
         return ESP_ERR_INVALID_STATE;
     }
 
-    if (!key_is_valid(key) || out == NULL) { 
+    if (!key_is_valid(key) || value == NULL) { 
         return ESP_ERR_INVALID_ARG;
     }
 
@@ -295,7 +295,30 @@ esp_err_t storage_get_bool(const char *key, bool *value) {
 }
 
 esp_err_t storage_get_str(const char *key, char *buf, size_t buf_len) {
+    if (!s_initialized) { 
+        return ESP_ERR_INVALID_STATE;
+    }
+    
+    if (!key_is_valid(key) || buf == NULL || buf_len == 0) {
+        return ESP_ERR_INVALID_ARG;
+    }
 
+    size_t len = buf_len;
+    esp_err_t err = nvs_get_str(s_handle, key, buf, &len);
+
+    if (err == ESP_ERR_NVS_NOT_FOUND) {
+        const storage_default_t *d = find_default(key, STORAGE_STRING);
+        
+        if (d) {
+            if (strlen(d->def.s) + 1 > buf_len) {
+                return ESP_ERR_INVALID_SIZE;
+            }
+            
+            strcpy(buf, d->def.s);
+            return ESP_OK;
+        }
+    }
+    return err;   
 }
 
 esp_err_t storage_delete(const char *key) {
