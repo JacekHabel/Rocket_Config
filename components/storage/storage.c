@@ -321,8 +321,16 @@ esp_err_t storage_get_str(const char *key, char *buf, size_t buf_len) {
     return err;   
 }
 
-esp_err_t storage_delete(const char *key) {
+esp_err_t storage_delete_element(const char *key) {
+    if (!s_initialized) {
+        return ESP_ERR_INVALID_STATE;
+    }
 
+    if (!key_is_valid(key)) {
+        return ESP_ERR_INVALID_ARG;
+    }
+
+    return commit_if_ok(nvs_erase_key(s_handle, key)); 
 }
 
 esp_err_t storage_list_all(void) {

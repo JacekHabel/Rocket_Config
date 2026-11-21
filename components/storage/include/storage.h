@@ -27,7 +27,7 @@ esp_err_t storage_get_f32(const char *key, float *value);
 esp_err_t storage_get_bool(const char *key, bool *value);
 esp_err_t storage_get_str(const char *key, char *buf, size_t buf_len);
 
-esp_err_t storage_delete(const char *key);
+esp_err_t storage_delete_element(const char *key);
 
 esp_err_t storage_list_all(void);
 
