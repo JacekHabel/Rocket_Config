@@ -145,10 +145,10 @@ esp_err_t storage_set_i32(const char *key, int32_t value) {
 }
 
 
-esp_err_t storage_set_f32(const char *key, float value) {
+esp_err_t storage_set_float(const char *key, float value) {
     bool exists;
 
-    esp_err_t err = pre_write_check(key, NVS_TYPE_BLOB, &exists);
+    esp_err_t err = pre_write_check(key, NVS_TYPE_FLOAT, &exists);
     
     if (err != ESP_OK) {
         return err;
@@ -156,14 +156,11 @@ esp_err_t storage_set_f32(const char *key, float value) {
 
     if (exists) {
         float cur;
-        size_t len = sizeof(cur);
-
-        if (nvs_get_blob(s_handle, key, &cur, &len) == ESP_OK && 
-            len == sizeof(cur) && memcmp(&cur, &value, sizeof(cur)) == 0) {
+        if (nvs_get_float(s_handle, key, &cur) == ESP_OK && cur == value) {
             return ESP_OK;
         }
     }
-    return commit_if_ok(nvs_set_blob(s_handle, key, &value, sizeof(value)));
+    return commit_if_ok(nvs_set_float(s_handle, key, value));
 }
 
 esp_err_t storage_set_bool(const char *key, bool value) {
@@ -233,7 +230,7 @@ esp_err_t storage_get_i32(const char *key, int32_t *value) {
     return err;
 }
 
-esp_err_t storage_get_f32(const char *key, float *value) {
+esp_err_t storage_get_float(const char *key, float *value) {
     if (!s_initialized) {
         return ESP_ERR_INVALID_STATE;
     }
@@ -242,18 +239,10 @@ esp_err_t storage_get_f32(const char *key, float *value) {
         return ESP_ERR_INVALID_ARG;
     }
 
-    float v;
-    size_t len = sizeof(v);
+    esp_err_t err = nvs_get_float(s_handle, key, value);
 
-    esp_err_t err = nvs_get_blob(s_handle, key, &v, &len);
-
-    if (err == ESP_OK) {
-        if (len != sizeof(v)) {
-            return ESP_ERR_INVALID_SIZE;
-        }
-
-        *value = v;
-        return ESP_OK;
+     if (err == ESP_OK) {
+        return err;
     }
 
     // If no value found, get default.  
@@ -334,5 +323,5 @@ esp_err_t storage_delete_element(const char *key) {
 }
 
 esp_err_t storage_list_all(void) {
-    
+
 }
