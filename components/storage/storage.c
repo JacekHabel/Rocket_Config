@@ -232,9 +232,39 @@ esp_err_t storage_get_i32(const char *key, int32_t *value) {
     }
     return err;
 }
-/*
-esp_err_t storage_get_f32(const char *key, float *out) {
 
+esp_err_t storage_get_f32(const char *key, float *value) {
+    if (!s_initialized) {
+        return ESP_ERR_INVALID_STATE;
+    }
+
+    if (!key_is_valid(key) || out == NULL) { 
+        return ESP_ERR_INVALID_ARG;
+    }
+
+    float v;
+    size_t len = sizeof(v);
+    
+    esp_err_t err = nvs_get_blob(s_handle, key, &v, &len);
+
+    if (err == ESP_OK) {
+        if (len != sizeof(v)) {
+            return ESP_ERR_INVALID_SIZE;
+        }
+
+        *value = v;
+        return ESP_OK;
+    }
+
+    // If no value found, get default.  
+    if (err == ESP_ERR_NVS_NOT_FOUND) {
+        const storage_default_t *d = find_default(key, STORAGE_FLOAT);
+        if (d) {
+            *value = d->def.f;
+            return ESP_OK; 
+        }
+    }
+    return err;
 }
 
 esp_err_t storage_get_bool(const char *key, bool *out) {
@@ -252,4 +282,3 @@ esp_err_t storage_delete(const char *key) {
 esp_err_t storage_list_all(void) {
     
 }
-*/
