@@ -175,16 +175,31 @@ esp_err_t storage_set_str(const char *key, const char *value) {
     }
     return commit_if_ok(nvs_set_str(s_handle, key, value));
 }
-/*
-esp_err_t storage_get_i32(const char *key, int32_t *out) {
 
+esp_err_t storage_get_i32(const char *key, int32_t *value) {
+    if (!s_initialized) {
+        return ESP_ERR_INVALID_STATE;
+    }
+
+    if(!key_is_valid(key) || value == NULL) {
+        return ESP_ERR_INVALID_ARG;
+    }
+
+    esp_err_t err = nvs_get_i32(s_handle, key, value);
+
+    if (err == ESP_OK) {
+        return err
+    }
 }
+
 esp_err_t storage_get_f32(const char *key, float *out) {
 
 }
+
 esp_err_t storage_get_bool(const char *key, bool *out) {
 
 }
+
 esp_err_t storage_get_str(const char *key, char *buf, size_t buf_len) {
 
 }
@@ -196,4 +211,3 @@ esp_err_t storage_delete(const char *key) {
 esp_err_t storage_list_all(void) {
     
 }
-*/
