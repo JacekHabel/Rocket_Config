@@ -128,6 +128,15 @@ esp_err_t storage_init(void) {
     return ESP_OK;    
 }
 
+void storage_deinit(void)
+{
+    if (!s_initialized) {
+        return;
+    } 
+    nvs_close(s_handle);
+    s_initialized = false;
+}
+
 esp_err_t storage_set_i32(const char *key, int32_t value) {
     bool exists;
     
