@@ -244,7 +244,7 @@ esp_err_t storage_get_f32(const char *key, float *value) {
 
     float v;
     size_t len = sizeof(v);
-    
+
     esp_err_t err = nvs_get_blob(s_handle, key, &v, &len);
 
     if (err == ESP_OK) {
@@ -267,8 +267,31 @@ esp_err_t storage_get_f32(const char *key, float *value) {
     return err;
 }
 
-esp_err_t storage_get_bool(const char *key, bool *out) {
+esp_err_t storage_get_bool(const char *key, bool *value) {
+    if (!s_initialized) {
+        return ESP_ERR_INVALID_STATE;
+    }
 
+    if (!key_is_valid(key) || out == NULL) { 
+        return ESP_ERR_INVALID_ARG;
+    }
+
+    uint8_t v;
+    esp_err_t err = nvs_get_u8(s_handle, key, &v);
+    
+    if (err == ESP_OK) {
+        *value = (v != 0);
+        return ESP_OK;
+    }
+
+    if (err == ESP_ERR_NVS_NOT_FOUND) {
+        const storage_default_t *d = find_default(key, STORAGE_BOOL);
+        if (d) {
+            *value = d->def.b;
+            return ESP_OK; 
+        }
+    }
+    return err;
 }
 
 esp_err_t storage_get_str(const char *key, char *buf, size_t buf_len) {
