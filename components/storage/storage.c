@@ -17,6 +17,37 @@ static bool key_is_valid(const char *key) {
     return key != NULL && key[0] != '\0' && strlen(key) <= NVS_KEY_NAME_MAX_SIZE - 1;
 }
 
+// Default configuration
+typedef struct {
+    const char *key;
+    storage_type_t type;
+    union {
+        int32_t     i;
+        float       f;
+        bool        b;
+        const char *s;
+    } def;
+} storage_default_t;
+
+static const storage_default_t s_defaults[] = {
+    { "thrust",   STORAGE_INT,    .def.i = 1000 },
+    { "mass",     STORAGE_FLOAT,  .def.f = 25.5f },
+    { "armed",    STORAGE_BOOL,   .def.b = false },
+    { "name",     STORAGE_STRING, .def.s = "rocket" },
+};
+
+#define DEFAULTS_COUNT (sizeof(s_defaults) / sizeof(s_defaults[0]))
+
+static const storage_default_t *find_default(const char *key, storage_type_t type)
+{
+    for (size_t i = 0; i < DEFAULTS_COUNT; i++) {
+        if (s_defaults[i].type == type && strcmp(s_defaults[i].key, key) == 0) {
+            return &s_defaults[i];
+        }
+    }
+    return NULL;
+}
+
 static esp_err_t pre_write_check(const char *key, nvs_type_t type, bool *exists) {
     if (!s_initialized) {
         return ESP_ERR_INVALID_STATE;
@@ -138,7 +169,7 @@ esp_err_t storage_set_f32(const char *key, float value) {
 esp_err_t storage_set_bool(const char *key, bool value) {
     bool exists;
 
-    esp_err_t = pre_write_check(key, NVS_TYPE_U8, &exists);
+    esp_err_t err = pre_write_check(key, NVS_TYPE_U8, &exists);
     if (err != ESP_OK) {
         return err;
     }
@@ -188,10 +219,11 @@ esp_err_t storage_get_i32(const char *key, int32_t *value) {
     esp_err_t err = nvs_get_i32(s_handle, key, value);
 
     if (err == ESP_OK) {
-        return err
+        return err;
     }
+    return err;
 }
-
+/*
 esp_err_t storage_get_f32(const char *key, float *out) {
 
 }
@@ -211,3 +243,4 @@ esp_err_t storage_delete(const char *key) {
 esp_err_t storage_list_all(void) {
     
 }
+*/
