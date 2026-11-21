@@ -221,6 +221,15 @@ esp_err_t storage_get_i32(const char *key, int32_t *value) {
     if (err == ESP_OK) {
         return err;
     }
+
+    // If no value found, get default.  
+    if (err == ESP_ERR_NVS_NOT_FOUND) {
+        const storage_default_t *d = find_default(key, STORAGE_INT);
+        if (d) {
+            *value = d->def.i; 
+            return ESP_OK; 
+        }
+    }
     return err;
 }
 /*
