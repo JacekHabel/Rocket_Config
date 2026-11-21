@@ -1,8 +1,7 @@
 #pragma once
 
-#include <stdbool.h>
 #include <stddef.h>
-#include <stdint.h>
+
 
 #include "esp_err.h"
 
@@ -24,7 +23,7 @@ typedef void (*storage_list_cb_t)(
 );
 
 esp_err_t storage_init(void);
-void storage_deinit(void);
+void storage_deinit(void); //for tests
 
 esp_err_t storage_set_i32(const char *key, int32_t value);
 esp_err_t storage_set_float(const char *key, float value);

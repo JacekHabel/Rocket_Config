@@ -1,7 +1,5 @@
 #include <stdio.h>
 #include <string.h>
-#include <stdbool.h>
-#include <stdint.h>
 
 #include "storage.h"
 #include "nvs.h"
