@@ -30,6 +30,7 @@ static bool key_is_valid(const char *key) {
     return true;
 }
 
+// Parsers char to valid type 
 static bool parse_i32(const char *s, int32_t *out) {
     char *end;
     errno = 0;
@@ -68,3 +69,31 @@ static bool parse_bool(const char *s, bool *out) {
 }
 
 typedef esp_err_t (*set_fn_t)(const char *key, const char *val, bool *parsed);    
+
+// Setters definitions
+static esp_err_t set_int(const char *key, const char *s, bool *parsed)
+{
+    int32_t v;
+    *parsed = parse_i32(s, &v);
+    return *parsed ? storage_set_i32(key, v) : ESP_OK;
+}
+
+static esp_err_t set_float(const char *key, const char *s, bool *parsed)
+{
+    float v;
+    *parsed = parse_float(s, &v);
+    return *parsed ? storage_set_float(key, v) : ESP_OK;
+}
+
+static esp_err_t set_bool(const char *key, const char *s, bool *parsed)
+{
+    bool v;
+    *parsed = parse_bool(s, &v);
+    return *parsed ? storage_set_bool(key, v) : ESP_OK;
+}
+
+static esp_err_t set_string(const char *key, const char *s, bool *parsed)
+{
+    *parsed = (strlen(s) <= STORAGE_STR_MAX_LEN);
+    return *parsed ? storage_set_str(key, s) : ESP_OK;
+}
