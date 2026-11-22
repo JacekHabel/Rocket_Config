@@ -158,7 +158,7 @@ static int cmd_set(int argc, char **argv) {
         }
 
         if (err == ESP_ERR_INVALID_STATE) {
-            printf("Error: '%s' exists with different type. Firstly delete '%s'\n, key, key");
+            printf("Error: '%s' exists with different type. Firstly delete '%s'\n", key, key);
             return CLI_ERR;
         }
 
