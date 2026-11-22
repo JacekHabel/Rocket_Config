@@ -223,9 +223,8 @@ static int cmd_get(int argc, char **argv) {
     return CLI_OK;
 }
 
-
-static int cmd_del(int argc, char **argv)
-{
+// 'delate key'
+static int cmd_del(int argc, char **argv) {
     if (argc != 2) {
         printf("Hint: del <key>\n");
         printf("Hint: learn to write stupid...\n");
@@ -246,3 +245,50 @@ static int cmd_del(int argc, char **argv)
     printf("%s BURNED IN THE LAVA!!!", argv[1]);
     return CLI_OK;
 }
+
+// list all - helper
+static void print_cb(const char *key, storage_type_t type, const char *value, bool is_default, void *ctx) {
+    int *count = (int *)ctx;
+
+    printf("%-7s %-15s = %s %s\n", type_name(type), key, value, is_default ? "  (default)" : "");
+    (*count)++;
+}
+
+// list all
+static int cmd_list(int argc, char **argv) {
+    (void)argc;
+    (void)argv;
+
+    int count = 0;
+    
+    printf("############################################################");
+    printf("#               MAGNIFICENT LIST OF STORAGE                #");
+    printf("############################################################");
+
+    printf("%-7s %-15s %s\n", "TYPE", "KEY", "VALUE");
+
+    esp_err_t err = storage_list_all(print_cb, &count);
+    if (err != ESP_OK) {
+        printf("Error: %s\n", esp_err_to_name(err));
+        return CLI_ERR;
+    }
+
+    printf("SUM: %d\n", count);
+    return CLI_OK;
+}
+
+static int cmd_reset(int argc, char **argv)
+{
+    (void)argc;
+    (void)argv;
+
+    esp_err_t err = storage_reset();
+    if (err != ESP_OK) {
+        printf("Blad: %s\n", esp_err_to_name(err));
+        return CLI_ERR;
+    }
+
+    printf("ALL DATA EATEN BY YO MAMA! only defaults left\n");
+    return CLI_OK;
+}
+
