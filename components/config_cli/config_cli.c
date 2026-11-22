@@ -2,6 +2,12 @@
 #include <ctype.h>
 #include <math.h>
 #include <errno.h>
+#include <stdbool.h>
+#include <stdint.h>
+#include <stdlib.h>
+#include <string.h>
+#include <strings.h>
+
 
 #include "config_cli.h"
 #include "storage.h"
@@ -53,7 +59,7 @@ static bool parse_bool(const char *s, bool *out) {
         *out = true;
         return true;
     }
-    
+
     if (!strcasecmp(s, "false") || !strcmp(s, "0") || !strcasecmp(s, "off")) {
         *out = false;
         return true;
