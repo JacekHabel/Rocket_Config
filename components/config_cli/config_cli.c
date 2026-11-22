@@ -66,3 +66,5 @@ static bool parse_bool(const char *s, bool *out) {
     }
     return false;
 }
+
+typedef esp_err_t (*set_fn_t)(const char *key, const char *val, bool *parsed);    
