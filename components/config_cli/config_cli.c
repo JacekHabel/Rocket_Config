@@ -28,10 +28,23 @@ static bool parse_i32(const char *s, int32_t *out) {
     char *end;
     errno = 0;
     long long v = strtoll(s, &end, 10);
-    
+
     if (errno != 0 || end == s || *end != '\0' || v < INT32_MIN || v > INT32_MAX) {
         return false;
     }
     *out = (int32_t)v;
     return true;
 }
+
+static bool parse_float(const char *s, float *out) {
+    char *end;
+    errno = 0;
+    float v = strtof(s, &end);
+
+    if (errno != 0 || end == s || *end != '\0' || !isfinite(v)) {
+        return false;
+    }
+    *out = v;
+    return true;
+}
+
