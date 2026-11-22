@@ -166,7 +166,8 @@ static int cmd_set(int argc, char **argv) {
             return CLI_ERR;
         }
 
-        printf("data writen to storage: %s %s = %s", type_s, key, val);
+        printf("Written: %s %s = %s\n", type_s, key, val);
+        printf("Noice :D\n");
         return CLI_OK;
     }
 
@@ -194,4 +195,29 @@ static void find_cb(const char *key, storage_type_t type, const char *value, boo
     f->type       = type;
     f->is_default = is_default;
     snprintf(f->value, sizeof(f->value), "%s", value);
+}
+
+// 'get key_name'
+static int cmd_get(int argc, char **argv) {
+    if (argc != 2) {
+        printf("Hint: use get <key>\n");
+        printf("Hint: learn to write stupid...\n");
+        return CLI_ERR;
+    }
+
+    find_ctx_t f = { .key = argv[1] };
+    esp_err_t err = storage_list_all(find_cb, &f);
+
+    if (err != ESP_OK) {
+        printf("Error: %s\n", esp_err_to_name(err));
+        return CLI_ERR;
+    }
+    if (!f.found) {
+        printf("Error: key cannot be found'%s'\n", argv[1]);
+        printf("Maybe ask yo mama...");
+        return CLI_ERR;
+    }
+
+    printf("Read: %s %s = %s %s\n", type_name(f.type), f.key, f.value, f.is_default ? "(default)" : "");
+    return CLI_OK;
 }
