@@ -6,6 +6,7 @@
 #include "esp_err.h"
 
 #define STORAGE_STR_MAX_LEN 64 
+#define STORAGE_KEY_MAX_LEN 15
 
 typedef enum {
     STORAGE_INT,
