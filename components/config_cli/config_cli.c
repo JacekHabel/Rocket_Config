@@ -108,7 +108,7 @@ static const struct {
     { "int",    set_int    },
     { "float",  set_float  },
     { "bool",   set_bool   },
-    { "string", set_string },
+    { "str", set_string },
 };
 
 static const char *type_name(storage_type_t type) {
@@ -116,7 +116,7 @@ static const char *type_name(storage_type_t type) {
         case STORAGE_INT: return "int";
         case STORAGE_FLOAT: return "float";
         case STORAGE_BOOL: return "bool";
-        case STORAGE_STRING: return "string";
+        case STORAGE_STRING: return "str";
     }
     return "?";
 }
@@ -131,7 +131,7 @@ static int cmd_set(int argc, char **argv) {
     
     if (argc != 4 && !with_eq) {
         printf("WRONG COMMAND! Command structure: \n");
-        printf("set <int|float|bool|string> <key_name> [=] <value>\n");
+        printf("set <int|float|bool|str> <key_name> [=] <value>\n");
         return CLI_ERR;
     }
 
@@ -172,7 +172,7 @@ static int cmd_set(int argc, char **argv) {
         return CLI_OK;
     }
 
-    printf("Error: unidentified type '%s'. Use one from avaliable: int, float, bool, string\n", type_s);
+    printf("Error: unidentified type '%s'. Use one from avaliable: int, float, bool, str\n", type_s);
     return CLI_ERR;
 }
 
@@ -306,7 +306,7 @@ void cli_start(void)
 
     static const esp_console_cmd_t cmds[] = {
         { .command = "set",   .help = "Write key to flash",
-          .hint = "<int|float|bool|string> <key> [=] <value>", .func = cmd_set },
+          .hint = "<int|float|bool|str> <key> [=] <value>", .func = cmd_set },
         { .command = "get",   .help = "Read key and it's type and value from flash",
           .hint = "<key>", .func = cmd_get },
         { .command = "del",   .help = "Delete variable from flash - searched by key",
