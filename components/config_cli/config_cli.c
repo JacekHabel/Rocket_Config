@@ -214,7 +214,7 @@ static int cmd_get(int argc, char **argv) {
         return CLI_ERR;
     }
     if (!f.found) {
-        printf("Error: key cannot be found'%s'\n", argv[1]);
+        printf("Error: key '%s' cannot be found\n", argv[1]);
         printf("Maybe ask yo mama...\n");
         return CLI_ERR;
     }
@@ -242,7 +242,7 @@ static int cmd_del(int argc, char **argv) {
         return CLI_ERR;
     }
 
-    printf("%s BURNED IN THE LAVA!!!", argv[1]);
+    printf("%s BURNED IN THE LAVA!!!\n", argv[1]);
     return CLI_OK;
 }
 
