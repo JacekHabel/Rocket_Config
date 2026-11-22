@@ -12,6 +12,7 @@
 #include "config_cli.h"
 #include "storage.h"
 
+#define TYPES_COUNT (sizeof(s_types) / sizeof(s_types[0]))
 
 static bool key_is_valid(const char *key) {
     size_t n = strlen(key);
@@ -106,4 +107,13 @@ static const struct {
     { "string", set_string },
 };
 
+static const char *type_name(storage_type_t type) {
+    switch(type) {
+        case STORAGE_INT: return "int";
+        case STORAGE_FLOAT: return "float";
+        case STORAGE_BOOL: return "bool";
+        case STORAGE_STRING: return "string";
+    }
+    return "?";
+}
 
