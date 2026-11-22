@@ -2,7 +2,6 @@
 #include <ctype.h>
 #include <math.h>
 #include <errno.h>
-#include <stdbool.h>
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
@@ -12,6 +11,7 @@
 #include "config_cli.h"
 #include "storage.h"
 #include "nvs.h"
+#include "esp_console.h"
 
 #define TYPES_COUNT (sizeof(s_types) / sizeof(s_types[0]))
 
@@ -277,6 +277,7 @@ static int cmd_list(int argc, char **argv) {
     return CLI_OK;
 }
 
+// erases all data and lefts only defaults
 static int cmd_reset(int argc, char **argv)
 {
     (void)argc;
@@ -292,3 +293,33 @@ static int cmd_reset(int argc, char **argv)
     return CLI_OK;
 }
 
+// Finaly main boss 
+
+void cli_start(void)
+{
+    esp_console_repl_t *repl = NULL;
+    esp_console_repl_config_t repl_cfg = ESP_CONSOLE_REPL_CONFIG_DEFAULT();
+    repl_cfg.prompt = "rocket> ";
+    repl_cfg.task_stack_size = 6144;
+
+    ESP_ERROR_CHECK(esp_console_new_repl_stdio(&repl_cfg, &repl));
+
+    static const esp_console_cmd_t cmds[] = {
+        { .command = "set",   .help = "Write key to flash",
+          .hint = "<int|float|bool|string> <key> [=] <value>", .func = cmd_set },
+        { .command = "get",   .help = "Read key and it's type and value from flash",
+          .hint = "<key>", .func = cmd_get },
+        { .command = "del",   .help = "Delete variable from flash - searched by key",
+          .hint = "<key>", .func = cmd_del },
+        { .command = "list",  .help = "List all data in flash",
+          .func = cmd_list },
+        { .command = "reset", .help = "Erase all data - only defaults left",
+          .func = cmd_reset },
+    };
+
+    for (size_t i = 0; i < sizeof(cmds) / sizeof(cmds[0]); i++) {
+        ESP_ERROR_CHECK(esp_console_cmd_register(&cmds[i]));
+    }
+
+    ESP_ERROR_CHECK(esp_console_start_repl(repl));
+}
