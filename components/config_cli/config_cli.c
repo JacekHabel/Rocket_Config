@@ -183,4 +183,15 @@ typedef struct {
     char           value[STORAGE_STR_MAX_LEN + 1];
 } find_ctx_t; 
 
+static void find_cb(const char *key, storage_type_t type, const char *value, bool is_default, void *ctx) {
+    find_ctx_t *f = (find_ctx_t *)ctx;
 
+    if (f->found || strcmp(key, f->key) != 0) {
+        return;
+    }
+    
+    f->found      = true;
+    f->type       = type;
+    f->is_default = is_default;
+    snprintf(f->value, sizeof(f->value), "%s", value);
+}
