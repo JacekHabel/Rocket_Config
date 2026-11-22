@@ -13,8 +13,6 @@
 #include "storage.h"
 
 
-#define STORAGE_KEY_MAX_LEN 15
-
 static bool key_is_valid(const char *key) {
     size_t n = strlen(key);
 
@@ -107,3 +105,5 @@ static const struct {
     { "bool",   set_bool   },
     { "string", set_string },
 };
+
+
