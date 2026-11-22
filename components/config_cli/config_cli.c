@@ -140,7 +140,7 @@ static int cmd_set(int argc, char **argv) {
     const char *val    = argv[argc -1]; 
 
     if (!key_is_valid(key)) {
-        printf("Error: key length cannot exceed %d signs\n", STORAGE_KEY_MAX_LEN);
+        printf("Error: key can only have letters, digits and '_' , length cannot exceed %d signs\n", STORAGE_KEY_MAX_LEN);
         return CLI_ERR;
     }
 

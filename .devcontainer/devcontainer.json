@@ -15,5 +15,5 @@
 			]
 		}
 	},
-	"runArgs": ["--privileged"]
+	"runArgs": ["--device=/dev/ttyUSB0"]
 }
