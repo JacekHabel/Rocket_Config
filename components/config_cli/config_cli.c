@@ -261,9 +261,9 @@ static int cmd_list(int argc, char **argv) {
 
     int count = 0;
     
-    printf("############################################################");
-    printf("#               MAGNIFICENT LIST OF STORAGE                #");
-    printf("############################################################");
+    printf("############################################################\n");
+    printf("#               MAGNIFICENT LIST OF STORAGE                #\n");
+    printf("############################################################\n");
 
     printf("%-7s %-15s %s\n", "TYPE", "KEY", "VALUE");
 
