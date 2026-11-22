@@ -14,6 +14,9 @@
 
 #define TYPES_COUNT (sizeof(s_types) / sizeof(s_types[0]))
 
+#define CLI_OK  0
+#define CLI_ERR 1
+
 static bool key_is_valid(const char *key) {
     size_t n = strlen(key);
 
@@ -115,5 +118,59 @@ static const char *type_name(storage_type_t type) {
         case STORAGE_STRING: return "string";
     }
     return "?";
+}
+
+/*
+-------------- CLI commands ---------------
+*/
+
+// 'set int key = value'
+static int cmd_set(int argc, char **argv) {
+    bool with_eq = (argc == 5 && strcmp(argv[3], "=") == 0);
+    
+    if (argc != 4 && !with_eq) {
+        printf("WRONG COMMAND! Command structure: \n");
+        printf("set <int|float|bool|string> <key_name> [=] <value>\n");
+        return CLI_ERR;
+    }
+
+    const char *type_s = argv[1];
+    const char *key    = argv[2];
+    const char *val    = argv[argc -1]; 
+
+    if (!key_is_valid(key)) {
+        printf("Error: key length cannot exceed %d signs\n", STORAGE_KEY_MAX_LEN);
+        return CLI_ERR;
+    }
+
+    for (size_t i = 0; i < TYPES_COUNT; i++) {
+        if (strcmp(type_s, s_types[i].name) != 0) {
+            continue;
+        }
+
+        bool parsed = false;
+        esp_err_t err = s_types[i].set(key,val, &parsed);
+
+        if (!parsed) {
+            printf("Error: '%s' is not valid value of type %s\n", val, type_s);
+            return CLI_ERR;
+        }
+
+        if (err == ESP_ERR_INVALID_STATE) {
+            printf("Error: '%s' exists with different type. Firstly delete '%s'\n, key, key");
+            return CLI_ERR;
+        }
+
+        if (err != ESP_OK) {
+            printf("Error: error writing to storage: %s\n", esp_err_to_name(err));
+            return CLI_ERR;
+        }
+
+        printf("data writen to storage: %s %s = %s", type_s, key, val);
+        return CLI_OK;
+    }
+
+    printf("Error: unidentified type '%s'. Use one from avaliable: int, float, bool, string\n", type_s);
+    return CLI_ERR;
 }
 
