@@ -389,6 +389,12 @@ esp_err_t storage_delete_element(const char *key) {
     return err;
 }
 
+esp_err_t storage_reset(void)
+{
+    if (!s_initialized) return ESP_ERR_INVALID_STATE;
+    return commit_if_ok(nvs_erase_all(s_handle));
+}
+
 esp_err_t storage_list_all(storage_list_cb_t cb, void *ctx) {
     if (!s_initialized) {
         ESP_LOGI(TAG, "Cannot list storage: storage is not initialized");
@@ -474,3 +480,4 @@ esp_err_t storage_list_all(storage_list_cb_t cb, void *ctx) {
 
     return ESP_OK;
 }
+
