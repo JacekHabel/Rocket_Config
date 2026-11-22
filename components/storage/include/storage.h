@@ -37,6 +37,7 @@ esp_err_t storage_get_bool(const char *key, bool *value);
 esp_err_t storage_get_str(const char *key, char *buf, size_t buf_len);
 
 esp_err_t storage_delete_element(const char *key);
+esp_err_t storage_reset(void);
 
 esp_err_t storage_list_all(storage_list_cb_t cb, void *ctx);
 
