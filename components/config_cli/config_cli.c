@@ -11,6 +11,7 @@
 
 #include "config_cli.h"
 #include "storage.h"
+#include "nvs.h"
 
 #define TYPES_COUNT (sizeof(s_types) / sizeof(s_types[0]))
 
@@ -214,10 +215,34 @@ static int cmd_get(int argc, char **argv) {
     }
     if (!f.found) {
         printf("Error: key cannot be found'%s'\n", argv[1]);
-        printf("Maybe ask yo mama...");
+        printf("Maybe ask yo mama...\n");
         return CLI_ERR;
     }
 
     printf("Read: %s %s = %s %s\n", type_name(f.type), f.key, f.value, f.is_default ? "(default)" : "");
+    return CLI_OK;
+}
+
+
+static int cmd_del(int argc, char **argv)
+{
+    if (argc != 2) {
+        printf("Hint: del <key>\n");
+        printf("Hint: learn to write stupid...\n");
+        return CLI_ERR;
+    }
+
+    esp_err_t err = storage_delete_element(argv[1]);
+    
+    if (err == ESP_ERR_NVS_NOT_FOUND) {
+        printf("Error: '%s' is not written to flash (does not exists or is default that cannot be erased)\n", argv[1]);
+        return CLI_ERR;
+    }
+    if (err != ESP_OK) {
+        printf("Error: %s\n", esp_err_to_name(err));
+        return CLI_ERR;
+    }
+
+    printf("%s BURNED IN THE LAVA!!!", argv[1]);
     return CLI_OK;
 }
