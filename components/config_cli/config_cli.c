@@ -48,3 +48,15 @@ static bool parse_float(const char *s, float *out) {
     return true;
 }
 
+static bool parse_bool(const char *s, bool *out) {
+    if (!strcasecmp(s, "true") || !strcmp(s, "1") || !strcasecmp(s, "on")) {
+        *out = true;
+        return true;
+    }
+    
+    if (!strcasecmp(s, "false") || !strcmp(s, "0") || !strcasecmp(s, "off")) {
+        *out = false;
+        return true;
+    }
+    return false;
+}
