@@ -174,3 +174,13 @@ static int cmd_set(int argc, char **argv) {
     return CLI_ERR;
 }
 
+// info of/for wanted data
+typedef struct {
+    const char    *key;
+    bool           found;
+    bool           is_default;
+    storage_type_t type;
+    char           value[STORAGE_STR_MAX_LEN + 1];
+} find_ctx_t; 
+
+
