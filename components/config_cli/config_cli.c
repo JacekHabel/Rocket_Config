@@ -97,3 +97,13 @@ static esp_err_t set_string(const char *key, const char *s, bool *parsed)
     *parsed = (strlen(s) <= STORAGE_STR_MAX_LEN);
     return *parsed ? storage_set_str(key, s) : ESP_OK;
 }
+
+static const struct {
+    const char *name;
+    set_fn_t    set;
+} s_types[] = {
+    { "int",    set_int    },
+    { "float",  set_float  },
+    { "bool",   set_bool   },
+    { "string", set_string },
+};
